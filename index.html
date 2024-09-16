@@ -11,6 +11,7 @@
             margin: 0;
             overflow: hidden;
             font-family: Arial, sans-serif;
+            position: relative;
         }
         #gameCanvas {
             display: block;
@@ -32,12 +33,40 @@
             max-width: 90%;
             z-index: 10;
         }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .btn {
+            width: 60px;
+            height: 60px;
+            background-color: #FF4500;
+            color: white;
+            font-size: 24px;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <div id="message">Letícia, estou morrendo de saudades de você! ❤️</div>
+
+    <!-- Controles de toque para dispositivos móveis -->
+    <div id="controls">
+        <button class="btn" id="leftBtn">⬅️</button>
+        <button class="btn" id="jumpBtn">⬆️</button>
+        <button class="btn" id="rightBtn">➡️</button>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -59,6 +88,9 @@
         let hearts = [];
         let heartCount = 0;
         let maxHearts = 5;
+
+        let movingLeft = false;
+        let movingRight = false;
 
         // Gerar corações
         function generateHearts() {
@@ -89,6 +121,14 @@
         function updatePlayer() {
             player.y += player.dy;
             player.dy += player.gravity;
+
+            // Movimento lateral
+            if (movingLeft && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if (movingRight && player.x + player.width < canvas.width) {
+                player.x += player.speed;
+            }
 
             // Checar colisão com o chão
             if (player.y + player.height > canvas.height) {
@@ -142,15 +182,38 @@
                 jump();
             }
             if (e.code === 'ArrowLeft') {
-                player.x -= player.speed;
+                movingLeft = true;
             }
             if (e.code === 'ArrowRight') {
-                player.x += player.speed;
+                movingRight = true;
             }
         });
 
-        // Controles para dispositivos móveis
-        document.addEventListener('touchstart', () => {
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'ArrowLeft') {
+                movingLeft = false;
+            }
+            if (e.code === 'ArrowRight') {
+                movingRight = false;
+            }
+        });
+
+        // Controles de toque para dispositivos móveis
+        document.getElementById('leftBtn').addEventListener('touchstart', () => {
+            movingLeft = true;
+        });
+        document.getElementById('leftBtn').addEventListener('touchend', () => {
+            movingLeft = false;
+        });
+
+        document.getElementById('rightBtn').addEventListener('touchstart', () => {
+            movingRight = true;
+        });
+        document.getElementById('rightBtn').addEventListener('touchend', () => {
+            movingRight = false;
+        });
+
+        document.getElementById('jumpBtn').addEventListener('touchstart', () => {
             jump();
         });
 

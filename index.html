@@ -7,68 +7,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body {
-            background-color: #ffe6f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            background-color: #f0f8ff;
             margin: 0;
             overflow: hidden;
             font-family: Arial, sans-serif;
         }
-        #heart {
-            font-size: 100px;
-            cursor: pointer;
-            color: #ff4d4d;
-            /* Animação de pulsar */
-            animation: pulsate 1s infinite;
-        }
-        /* Animação de pulsar */
-        @keyframes pulsate {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
-            100% {
-                transform: scale(1);
-            }
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #87CEEB;
         }
         #message {
             display: none;
-            font-size: 24px;
-            color: #333;
-            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.7);
             padding: 20px;
-            max-width: 80%;
-            /* Configurações para animação de fade-in */
-            opacity: 0;
-            transition: opacity 2s;
-        }
-        /* Classe para iniciar a animação de fade-in */
-        #message.show {
-            opacity: 1;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 90%;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div id="container">
-        <div id="heart">❤️</div>
-        <div id="message">Letícia, estou morrendo de saudades de você! ❤️</div>
-    </div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="message">Letícia, estou morrendo de saudades de você! ❤️</div>
 
     <script>
-        const heart = document.getElementById('heart');
-        const message = document.getElementById('message');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        heart.addEventListener('click', () => {
-            heart.style.display = 'none';
+        let player = {
+            x: 50,
+            y: 500,
+            width: 50,
+            height: 50,
+            color: '#FF4500',
+            speed: 5,
+            dy: 0,
+            gravity: 0.5,
+            jumpPower: -10,
+            grounded: false
+        };
+
+        let hearts = [];
+        let heartCount = 0;
+        let maxHearts = 5;
+
+        // Gerar corações
+        function generateHearts() {
+            for (let i = 0; i < maxHearts; i++) {
+                hearts.push({
+                    x: Math.random() * (canvas.width - 50),
+                    y: Math.random() * 300 + 100,
+                    size: 30,
+                    color: '#FF1493'
+                });
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawHearts() {
+            hearts.forEach(heart => {
+                ctx.fillStyle = heart.color;
+                ctx.beginPath();
+                ctx.arc(heart.x, heart.y, heart.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function updatePlayer() {
+            player.y += player.dy;
+            player.dy += player.gravity;
+
+            // Checar colisão com o chão
+            if (player.y + player.height > canvas.height) {
+                player.y = canvas.height - player.height;
+                player.dy = 0;
+                player.grounded = true;
+            } else {
+                player.grounded = false;
+            }
+        }
+
+        function checkCollision() {
+            hearts = hearts.filter(heart => {
+                if (player.x < heart.x + heart.size &&
+                    player.x + player.width > heart.x &&
+                    player.y < heart.y + heart.size &&
+                    player.y + player.height > heart.y) {
+                    heartCount++;
+                    return false;
+                }
+                return true;
+            });
+
+            if (heartCount === maxHearts) {
+                displayMessage();
+            }
+        }
+
+        function displayMessage() {
+            const message = document.getElementById('message');
             message.style.display = 'block';
-            // Inicia a animação de fade-in
-            message.classList.add('show');
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawHearts();
+            updatePlayer();
+            checkCollision();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function jump() {
+            if (player.grounded) {
+                player.dy = player.jumpPower;
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'ArrowUp' || e.code === 'Space') {
+                jump();
+            }
+            if (e.code === 'ArrowLeft') {
+                player.x -= player.speed;
+            }
+            if (e.code === 'ArrowRight') {
+                player.x += player.speed;
+            }
         });
+
+        // Controles para dispositivos móveis
+        document.addEventListener('touchstart', () => {
+            jump();
+        });
+
+        // Inicializar o jogo
+        generateHearts();
+        gameLoop();
     </script>
+
 </body>
 </html>
